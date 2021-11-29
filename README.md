@@ -563,23 +563,99 @@ where tipo_movimentacao = "C";
 <table>				
 <tr>	<th>	media	</th>	</tr>
 <tr>	<td>	1404.55	</td>	</tr>
-</table>				
+</table>		
 
-### 17. Qual a média de valores creditados nas contas bancárias? 
+								
+
+			
+
+### 17. Qual a idade dos clientes que estão com o cadastro ativo?
+
 
 
 ```sql
-select 
-  round(mean(valor),2) media
+select distinct(id_cliente), nome, floor(datediff(current_date, date(data_nascimento))/365.25) idade 
 from tb_relatorio
-where tipo_movimentacao = "C";
+where status_cliente = "ativo"
+order by idade asc;
 
 ```
-<table>				
-<tr>	<th>	media	</th>	</tr>
-<tr>	<td>	1404.55	</td>	</tr>
+<table>										
+<tr>	<th>	id_cliente	</th>	<th>	nome	</th>	<th>	idade	</th>	</tr>
+<tr>	<td>	7	</td>	<td>	Marina	</td>	<td>	21	</td>	</tr>
+<tr>	<td>	3	</td>	<td>	Juliane	</td>	<td>	26	</td>	</tr>
+<tr>	<td>	4	</td>	<td>	Barbara	</td>	<td>	28	</td>	</tr>
+<tr>	<td>	1	</td>	<td>	Arthur	</td>	<td>	31	</td>	</tr>
+<tr>	<td>	9	</td>	<td>	Flavio	</td>	<td>	32	</td>	</tr>
+<tr>	<td>	5	</td>	<td>	Bruno	</td>	<td>	41	</td>	</tr>
+<tr>	<td>	10	</td>	<td>	Joaquim	</td>	<td>	51	</td>	</tr>
+<tr>	<td>	2	</td>	<td>	Marcos	</td>	<td>	56	</td>	</tr>
+<tr>	<td>	6	</td>	<td>	Luciana	</td>	<td>	71	</td>	</tr>
 </table>		
 
+![newplot](https://user-images.githubusercontent.com/77210732/143846881-05dbe663-5b61-406e-9a66-fc0c7ee1e73e.png)
+
+### 18. Qual a média da idade dos clientes com cadastro ativo?
+
+```sql
+select round(mean(idade), 2) media
+from
+(select distinct(id_cliente), nome, floor(datediff(current_date, date(data_nascimento))/365.25) idade 
+from tb_relatorio
+where status_cliente = "ativo"
+order by idade asc);
+```
+<table>				
+<tr>	<th>	media </th>	</tr>
+<tr>	<td>	39.7	</td>	</tr>
+</table>				
+
+### 19. Qual o desvio padrão das idades?
+
+```sql
+select round(std(idade), 2) desvio_padrao
+from
+(select distinct(id_cliente), nome, floor(datediff(current_date, date(data_nascimento))/365.25) idade 
+from tb_relatorio
+where status_cliente = "ativo"
+order by idade asc);
+```
+
+<table>				
+<tr>	<th>	desvio_padrao </th>	</tr>
+<tr>	<td>	16.52	</td>	</tr>
+</table>	
+
+### 20. Qual o intervalo de abrangência das idades dos clientes considerando uma probabilidade de 68,26%?
+```sql
+SELECT round(mean(idade) - std(idade),2) intervalo_inicio,   round(mean(idade) + std(idade),2) intervalo_final
+FROM (select distinct(id_cliente), nome, floor(datediff(current_date, date(data_nascimento))/365.25) idade 
+from tb_relatorio
+where status_cliente = "ativo"
+order by idade asc);
+```
+
+<table>							
+<tr>	<th>	intervalo_inicio	</th>	<th>	intervalo_final	</th>	</tr>
+<tr>	<td>	23.14	</td>	<td>	56.19	</td>	</tr>
+</table>							
+
+### 21. Montar um Box plot com as idades dos clientes que possuem cadastros ativos.
+
+```python
+%python
+
+idade = spark.sql('''
+select nome, CAST(idade AS INT)
+from
+(select distinct(id_cliente), nome, floor(datediff(current_date, date(data_nascimento))/365.25) idade 
+from tb_relatorio
+where status_cliente = "ativo"
+order by idade asc);
+''').toPandas()
+idade.boxplot(showmeans=True);
+
+```
 
 
-
+![box_plot](https://user-images.githubusercontent.com/77210732/143848287-98f69898-f70e-4ceb-805f-55795c0bd279.png)
